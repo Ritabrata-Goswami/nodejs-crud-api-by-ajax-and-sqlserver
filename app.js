@@ -40,6 +40,6 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-app.listen(5000, () =>{console.log('Server connected successfully at PORT 5200 at URL: http://127.0.0.1:5000/');});
+app.listen(5000, () =>{console.log('Server connected successfully at PORT 5000 at URL: http://127.0.0.1:5000/');});
 
 module.exports = app;
