@@ -1,0 +1,122 @@
+<html>
+    <head>
+        <title>node ajax</title>
+        <meta charset = 'utf-8'/>
+        <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0'/>
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+        <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-colors-flat.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+        <style type="text/css">
+        .output-container{
+            display: none;
+            position:fixed;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            top: 0;
+            padding-top: 100px;
+        }
+        .display-box{
+            width:600px;
+            border-radius: 2px;
+            margin:auto;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="w3-padding w3-center">
+            <h3>Ticket Booking Application</h3>
+            <h4>Fill up all the details</h4>
+            <div class="w3-padding w3-container" style="width:50%; margin:auto;">
+                <p><span style="font-weight:bold;">Enter name:</span>
+                <input type="text" placeholder="Enter your name" class="w3-input w3-border" style="font-size:13.5px;" id="customer-name"/></p>
+                <p><span style="font-weight:bold;">Enter gender:</span>
+                <input type="radio" style="font-size: 14px;" name='enter_gender' class="enter_gender" value="male">male
+                <input type="radio" style="font-size: 14px;" name='enter_gender' class="enter_gender" value="female">female</p>
+                <p><span style="font-weight:bold;">Enter country:</span>
+                <select id="select-country">
+                    <option value="" style="font-size:13.5px; text-align: center;">--select--</option>
+                    <option value="usa" style="font-size:13.5px; text-align: center;">US</option>
+                    <option value="china" style="font-size:13.5px; text-align: center;">China</option>
+                    <option value="france" style="font-size:13.5px; text-align: center;">France</option>
+                    <option value="germany" style="font-size:13.5px; text-align: center;">Germany</option>
+                </select></p>
+                <p><span style="font-weight:bold;">Choose manu:</span>
+                    <input type="checkbox" style="font-size: 14px;" class="customer-manu" value="drianks">drianks
+                    <input type="checkbox" style="font-size: 14px;" class="customer-manu" value="appetizer">appetizer
+                    <input type="checkbox" style="font-size: 14px;" class="customer-manu" value="main-course">main course
+                    <input type="checkbox" style="font-size: 14px;" class="customer-manu" value="sweets">sweets</p>
+                <p><span style="font-weight:bold;">Upload Photo: </span><input type="file" id="upload-file"/></p>
+                <button id="submit" style="width:100%;border:none;cursor:pointer;color:beige;background-color: rgb(66, 123, 209); padding:6px 0px;border-radius: 2px;">submit</button>
+            </div>
+            <a href="/display"><button class="w3-button w3-green w3-hover-black">Display</button></a>
+        </div>
+
+        <div class="output-container" id="output-container">
+            <div class="display-box w3-flat-wet-asphalt w3-padding">
+                <div class = "close-model" style = 'font-size: 30px; font-weight: bold; float: right; cursor:pointer;' id="cut-display" onclick="document.getElementById('output-container').style.display='none';">&times;</div>
+                <div id="content" style="text-align:center; margin-top:10px; margin-bottom:5px; font-size:14px;"></div>
+            </div>
+        </div>
+
+        <script>
+            document.getElementById('submit').addEventListener('click',()=>{
+                var formdata = new FormData();
+                var name = document.getElementById('customer-name').value;
+                var gender = $(".enter_gender:checked").val();
+                var country = document.getElementById('select-country').value;
+                var photo = document.getElementById('upload-file').files[0];
+
+                var manuArr = [];
+                $('.customer-manu').each(function(){  
+                    if($(this).is(":checked"))  
+                    {  
+                        manuArr.push($(this).val());  
+                    }  
+                });
+                selectedManu = manuArr.toString(); 
+                
+                if(name == '' || country == '' || photo === undefined || !gender || manuArr.length == 0)
+                {
+                    console.log('Fields can\'t kept empty!');
+                    document.getElementById('output-container').style.display = 'block';
+                    document.getElementById('content').innerHTML = '<span style="color:#ff6666;">Fields can\'t be left blank!</span>';
+                    return false;
+                }
+                else
+                {
+                    formdata.append('enterName',name);
+                    formdata.append('enterGender',gender);
+                    formdata.append('enterCountry',country);
+                    formdata.append('enterManu',selectedManu);
+                    formdata.append('enterPhoto',photo);
+                    $.ajax({
+                        method:'post',
+                        url:'/submit',
+                        data:formdata,
+                        contentType:false,
+                        processData: false,
+                        success:(result) => {
+                            console.log(result);
+                            var successResult = JSON.parse(result);
+                            if(successResult)
+                            {
+                                document.getElementById('output-container').style.display = 'block';
+                                document.getElementById('content').innerHTML = '<span style="text-align:center;"><i class="fa fa-check-circle" style="font-size:30px; color:#47d147;"></i></span><br/><span style="text-align:center; color:#47d147; font-size:17px;">' + successResult.success + '</span>';   
+                            }
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) 
+                        {
+                            document.getElementById('output-container').style.display = 'block';
+                            document.getElementById('content').innerHTML = 'Error Code:- ' + '<span style="color:#ff6666;">' + jqXHR.status + '</span>.<br/> Error Status:- ' + '<span style="color:#ff6666;">' + errorThrown + '!</span>';
+                        }
+                    });
+                    return true;
+                }
+            });
+        </script>
+    </body>
+</html>
+

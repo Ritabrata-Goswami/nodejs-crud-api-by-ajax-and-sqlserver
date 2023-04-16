@@ -1,0 +1,313 @@
+<html>
+    <head>
+        <title>node ajax</title>
+        <meta charset = 'utf-8'/>
+        <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0'/>
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+        <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-colors-flat.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+        <style type="text/css">
+            table,tr,th,td{border:0.5px solid #000000;}
+            th,td{padding:5px 5px;}
+            td{font-size:14px;}
+            .output-container{
+                display: none;
+                position:fixed;
+                z-index: 2;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                top: 0;
+                padding-top: 100px;
+            }
+            .display-box{
+                width:600px;
+                border-radius: 2px;
+                margin:auto;
+            }
+            .edit-display-box{
+                width:700px;
+                border-radius: 2px;
+                margin:auto;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="w3-padding">
+            <h4>Display user data</h4>
+            <h4>To remove all the data hit the button below</h4>
+            <button id="remove-data" class="w3-button w3-red w3-hover-black">Clear All Data</button>
+            <table class="w3-margin-top">
+                <tr>
+                    <th>ID</th>
+                    <th>User name</th>
+                    <th>Gender</th>
+                    <th>Country</th>
+                    <th>Manu</th>
+                    <th>Photo</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+
+                <%
+                if(display.length > 0)
+                {
+                    for(var i = 0; i < display.length; i++)
+                    {
+                %>
+
+                <tr id="row_<%=i+1%>">
+                    <td><%=i+1%></td>
+                    <td><%=display[i].user_name%></td>
+                    <td><%=display[i].gender%></td>
+                    <td><%=display[i].country%></td>
+                    <td><%=display[i].manu%></td>
+                    <td><img src="./uploads/<%=display[i].photo%>" title="user photo" alt="photo" style="width:100px; height:100px;"/></td>
+                    <td><button class="w3-button w3-blue w3-hover-black" onclick="sendEditRequest('<%=display[i].id%>','<%=i+1%>')">Edit</button></td>
+                    <td><button class="w3-button w3-red w3-hover-yellow" onclick="sendDelete('<%=display[i].id%>','<%=i+1%>')">Delete</button></td>
+                </tr>
+
+                <%
+                    }
+                }
+                else
+                {
+                %>
+
+                <tr>
+                    <td style="font-size:18px; color:#e94747; text-align:center;" colspan="8">Sorry! No Records To Display!</td>
+                </tr>
+
+                <%
+                }
+                %>
+
+            </table>
+            <a href="/"><button class="w3-button w3-green w3-hover-black w3-margin-top">Form</button></a>
+        </div>
+
+        <div class="output-container" id="output-container">
+            <div class="display-box w3-flat-wet-asphalt w3-padding">
+                <div class = "close-model" style = 'font-size: 30px; font-weight: bold; float: right; cursor:pointer;' id="cut-display" onclick="document.getElementById('output-container').style.display='none';">&times;</div>
+                <div id="content" style="text-align:center; margin-top:10px; margin-bottom:5px; font-size:14px;"></div>
+            </div>
+        </div>
+
+        <div class="output-container" id="edit-container">
+            <div class="edit-display-box w3-flat-wet-asphalt w3-padding">
+                <div class = "close-model" style = 'font-size: 30px; font-weight: bold; float: right; cursor:pointer;' id="cut-display" onclick="document.getElementById('edit-container').style.display='none';">&times;</div>
+                <div id="edit-content" style="text-align:center; margin-top:10px; margin-bottom:5px; font-size:14px;"></div>
+                <button id="update-content" style="width:100%;padding:5px 0px;cursor:pointer;color:antiquewhite;background-color: rgb(73, 126, 224);border:none;margin-top: 10px;border-radius: 2px;">Update</button>
+            </div>
+        </div>
+
+        <script>
+            document.getElementById('remove-data').addEventListener('click',()=>{
+                $.ajax({
+                    method:'post',
+                    url:'/clear-all',
+                    success:(result)=>{
+                        console.log(result);
+                        var successResult = JSON.parse(result);
+                        document.getElementById('output-container').style.display = 'block';
+                        document.getElementById('content').innerHTML = '<span style="text-align:center; color:#47d147; font-size:17px;">' + successResult.success + '</span>';   
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) 
+                    {
+                        document.getElementById('output-container').style.display = 'block';
+                        document.getElementById('content').innerHTML = 'Error Code:- ' + '<span style="color:#ff6666;">' + jqXHR.status + '</span>.<br/> Error Status:- ' + '<span style="color:#ff6666;">' + errorThrown + '!</span>';
+                    }
+                });
+            });
+
+            var sendDelete = (deleteId,id) =>{
+                var rowId = id;
+                $.ajax({
+                    method:'delete',
+                    url:'/delete',
+                    data:{'deleteId':deleteId},
+                    // contentType:'application/json',
+                    success:(result)=>{
+                        console.log(result);
+                        var successResult = JSON.parse(result);
+                        document.getElementById(`row_${rowId}`).style.display = 'none';
+                        document.getElementById('output-container').style.display = 'block';
+                        document.getElementById('content').innerHTML = '<span style="text-align:center; color:#47d147; font-size:17px;">' + successResult.success + '</span>';   
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) 
+                    {
+                        document.getElementById('output-container').style.display = 'block';
+                        document.getElementById('content').innerHTML = 'Error Code:- ' + '<span style="color:#ff6666;">' + jqXHR.status + '</span>.<br/> Error Status:- ' + '<span style="color:#ff6666;">' + errorThrown + '!</span>';
+                    }
+                });
+            }
+
+            var sendEditRequest = (editID, countId) =>{
+                $.ajax({
+                    method:'POST',
+                    url:'/edit-req',
+                    data:{'editId':editID},
+                    success:(result)=>{
+                        console.log(result);
+                        var successResult = JSON.parse(result);
+                        document.getElementById('edit-container').style.display = 'block';
+                        for(var i = 0; i < successResult.length; i++)
+                        {
+                            var manuStr = successResult[i].manu;
+                            var manuArr = manuStr.split(',');
+
+                            document.getElementById('edit-content').innerHTML = `Name:<input type="text" placeholder="Enter your name" class="w3-input w3-border" style="font-size:13.5px;" id="customer-name" value='${successResult[i].user_name}'/>
+                                                                                <p>Gender:
+                                                                                    <input type="radio" style="font-size: 14px;" name='enter_gender' class="enter_gender" value="male" ${((successResult[i].gender) == 'male') ? 'checked' : ''}>male
+                                                                                    <input type="radio" style="font-size: 14px;" name='enter_gender' class="enter_gender" value="female" ${((successResult[i].gender) == 'female') ? 'checked' : ''}>female
+                                                                                <p>
+                                                                                Country:
+                                                                                <select id="select-country">
+                                                                                    <option value="usa" style="font-size:13.5px; text-align: center;" ${((successResult[i].country) == 'usa') ? 'selected' : ''}>US</option>
+                                                                                    <option value="china" style="font-size:13.5px; text-align: center;" ${((successResult[i].country) == 'china') ? 'selected': ''}>China</option>
+                                                                                    <option value="france" style="font-size:13.5px; text-align: center;" ${((successResult[i].country) == 'france') ? 'selected' : ''}>France</option>
+                                                                                    <option value="germany" style="font-size:13.5px; text-align: center;" ${((successResult[i].country) == 'germany') ? 'selected' : ''}>Germany</option>
+                                                                                </select>
+                                                                                </p>
+                                                                                <p>
+                                                                                Manu:
+                                                                                    <input type="checkbox" style="font-size: 14px;" class="customer-manu" value="drianks" ${((manuArr.includes('drianks')) == true) ? 'checked' : ''}>drianks
+                                                                                    <input type="checkbox" style="font-size: 14px;" class="customer-manu" value="appetizer" ${((manuArr.includes('appetizer')) == true) ? 'checked' : ''}>appetizer
+                                                                                    <input type="checkbox" style="font-size: 14px;" class="customer-manu" value="main-course" ${((manuArr.includes('main-course')) == true) ? 'checked' : ''}>main course
+                                                                                    <input type="checkbox" style="font-size: 14px;" class="customer-manu" value="sweets" ${((manuArr.includes('sweets')) == true) ? 'checked' : ''}>sweets
+                                                                                </p>
+                                                                                <p>
+                                                                                Upload Photo:
+                                                                                    <input type="file" id="upload-file"/>
+                                                                                    <input type="text" id="existed_file_name" value='${successResult[i].photo}' style="display:none"/>
+                                                                                    <input type="text" id="edit-id" value='${successResult[i].id}' style="display:none"/>
+                                                                                    <input type="text" id="count-id" value='${countId}' style="display:none"/>
+                                                                                </p>`;   
+                        }
+                    
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) 
+                    {
+                        document.getElementById('output-container').style.display = 'block';
+                        document.getElementById('content').innerHTML = 'Error Code:- ' + '<span style="color:#ff6666;">' + jqXHR.status + '</span>.<br/> Error Status:- ' + '<span style="color:#ff6666;">' + errorThrown + '!</span>';
+                    }
+                });
+            }
+
+            document.getElementById('update-content').addEventListener('click',()=>{
+                var formdata = new FormData();
+                var name = document.getElementById('customer-name').value;
+                var gender = $(".enter_gender:checked").val();
+                var country = document.getElementById('select-country').value;
+                var file = document.getElementById('upload-file').files[0];
+                var defaultFileName = document.getElementById('existed_file_name').value;
+                var id = document.getElementById('edit-id').value;
+                var countId = document.getElementById('count-id').value;
+
+                var manuArr = [];
+                    $('.customer-manu').each(function(){  
+                        if($(this).is(":checked"))  
+                        {  
+                            manuArr.push($(this).val());  
+                        }  
+                    });
+                selectedManu = manuArr.toString(); 
+
+                if(file === undefined)
+                {
+                    $.ajax({
+                        method:'POST',
+                        url:'/update-without-file',
+                        data:{
+                            'editId':id,
+                            'enterName':name,
+                            'enterGender':gender,
+                            'enterCountry':country,
+                            'enterManu':selectedManu,
+                            'filename':defaultFileName
+                        },
+                        success:(result)=>{
+                            console.log(result);
+                            var successResult = JSON.parse(result);
+                            console.log(successResult.updatedResult);
+                            for(var i = 0; i < successResult.updatedResult.length; i++)
+                            {
+                                // console.log(successResult.updatedResult[i].id);
+                                // console.log(successResult.updatedResult[i].user_name);
+                                // console.log(successResult.updatedResult[i].gender);
+                                // console.log(successResult.updatedResult[i].country);
+                                // console.log(successResult.updatedResult[i].manu);
+                                // console.log(successResult.updatedResult[i].photo);
+                                document.getElementById(`row_${countId}`).innerHTML = `<td>${countId}</td>
+                                                                                        <td>${successResult.updatedResult[i].user_name}</td>
+                                                                                        <td>${successResult.updatedResult[i].gender}</td>
+                                                                                        <td>${successResult.updatedResult[i].country}</td>
+                                                                                        <td>${successResult.updatedResult[i].manu}</td>
+                                                                                        <td><img src="./uploads/${successResult.updatedResult[i].photo}" title="user photo" alt="photo" style="width:100px; height:100px;"/></td>
+                                                                                        <td><button class="w3-button w3-blue w3-hover-black" onclick="sendEditRequest('${successResult.updatedResult[i].id}','${countId}')">Edit</button></td>
+                                                                                        <td><button class="w3-button w3-red w3-hover-yellow" onclick="sendDelete('${successResult.updatedResult[i].id}','${countId}')">Delete</button></td>`;
+                            }
+                            document.getElementById('edit-container').style.display = 'none';
+                            document.getElementById('output-container').style.display = 'block';
+                            document.getElementById('content').innerHTML = '<span style="text-align:center; color:#47d147; font-size:17px;">' + successResult.success + '</span>';   
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) 
+                        {
+                            document.getElementById('output-container').style.display = 'block';
+                            document.getElementById('content').innerHTML = 'Error Code:- ' + '<span style="color:#ff6666;">' + jqXHR.status + '</span>.<br/> Error Status:- ' + '<span style="color:#ff6666;">' + errorThrown + '!</span>';
+                        }
+                    });
+                }
+                else
+                {
+                    formdata.append('editId',id);
+                    formdata.append('enterName',name);
+                    formdata.append('enterGender',gender);
+                    formdata.append('enterCountry',country);
+                    formdata.append('enterManu',selectedManu);
+                    formdata.append('enterPhoto',file);
+
+                    $.ajax({
+                        method:'POST',
+                        url:'/update-with-file',
+                        data:formdata,
+                        contentType:false,
+                        processData: false,
+                        success:(result)=>{
+                            console.log(result);
+                            var successResult = JSON.parse(result);
+                            console.log(successResult.updatedResult);
+                            for(var i = 0; i < successResult.updatedResult.length; i++)
+                            {
+                                // console.log(successResult.updatedResult[i].id);
+                                // console.log(successResult.updatedResult[i].user_name);
+                                // console.log(successResult.updatedResult[i].gender);
+                                // console.log(successResult.updatedResult[i].country);
+                                // console.log(successResult.updatedResult[i].manu);
+                                // console.log(successResult.updatedResult[i].photo);
+                                document.getElementById(`row_${countId}`).innerHTML = `<td>${countId}</td>
+                                                                                        <td>${successResult.updatedResult[i].user_name}</td>
+                                                                                        <td>${successResult.updatedResult[i].gender}</td>
+                                                                                        <td>${successResult.updatedResult[i].country}</td>
+                                                                                        <td>${successResult.updatedResult[i].manu}</td>
+                                                                                        <td><img src="./uploads/${successResult.updatedResult[i].photo}" title="user photo" alt="photo" style="width:100px; height:100px;"/></td>
+                                                                                        <td><button class="w3-button w3-blue w3-hover-black" onclick="sendEditRequest('${successResult.updatedResult[i].id}','${countId}')">Edit</button></td>
+                                                                                        <td><button class="w3-button w3-red w3-hover-yellow" onclick="sendDelete('${successResult.updatedResult[i].id}','${countId}')">Delete</button></td>`;
+                            }
+                            document.getElementById('edit-container').style.display = 'none';
+                            document.getElementById('output-container').style.display = 'block';
+                            document.getElementById('content').innerHTML = '<span style="text-align:center; color:#47d147; font-size:17px;">' + successResult.success + '</span>';   
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) 
+                        {
+                            document.getElementById('output-container').style.display = 'block';
+                            document.getElementById('content').innerHTML = 'Error Code:- ' + '<span style="color:#ff6666;">' + jqXHR.status + '</span>.<br/> Error Status:- ' + '<span style="color:#ff6666;">' + errorThrown + '!</span>';
+                        }
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>
+
